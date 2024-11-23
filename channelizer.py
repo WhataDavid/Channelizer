@@ -1,23 +1,14 @@
-import queue
 import struct
 import sys
-import time
-from math import ceil
-import pylab as pl
 import os
-import cspfb
-import opfb
-import matplotlib
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 from scipy.fft import fft
 from collections import deque
-import multiprocessing
 import psr
 import time
-import threading
 
 
 # 创建 Logger 实例并重定向 sys.stdout
@@ -118,21 +109,6 @@ def gen_filter_coeffs(numtaps, M, D):
 
 
 def conv():
-    # data = []
-    # for i in range(1, 5):
-    #     data.append(i)
-    # np_data = np.asarray(data)
-    # reshape_data = np.reshape(np_data, (4, -1), order='F')
-    # polyphase_data = np.flipud(reshape_data)
-    # print("polyphase " + str(polyphase_data))
-    # coe = []
-    # for i in range(101, 103):
-    #     coe.append(i)
-    # coe.extend(list(reversed(coe)))
-    # np_coe = np.asarray(coe)
-    # coeffs = np.reshape(np_coe, (4, -1), order='F')
-    # print("coeffs " + str(coeffs))
-    filterd_signals = []
     print("1, 2, 3, 4, 5, 6")
     print("0.3, 0.7, 0.7, 0.3")
     print(np.convolve([1, 2, 3, 4, 5, 6], [0.3, 0.7, 0.7, 0.3]), 'convolve', '\n')
@@ -224,20 +200,6 @@ def cut_extra_channel_data_by_tail(data, CHANNEL_NUM, D):
     result_data = data[:, 0:cut_amount]
     # print("cut result_data.shape:", result_data.shape)
     return result_data
-
-
-# def cut_extra_channel_data_by_tail_of_timedomain(data, CHANNEL_NUM, D):
-#     if CHANNEL_NUM == D:
-#         return data
-#     data = np.fft.fft(np.fft.ifft(data, axis=0))
-#     plot_sub(np.fft.ifft(data), CHANNEL_NUM,
-#              "DX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd and rotate cut result:")
-#     data = np.array(data)
-#     duplicate_data_rate = D / CHANNEL_NUM
-#     cut_amount = int(data[0].size * duplicate_data_rate)
-#     result_data = data[:, 0:cut_amount]
-#     print("cut result_data.shape:", result_data.shape)
-#     return result_data
 
 
 def channel_reorder_and_reverse_image(data):
@@ -390,13 +352,23 @@ def realignment_coe(numtaps, M, D):
                 coe_reshape_add_zero[i, ::x] = coe_reshape[i]
             print("+++++++++++++++++++++4/3  coe_reshape_add_zero\n", coe_reshape_add_zero)
             # GSC add zero code end
-
+            print(coe_reshape_add_zero.shape)
             coe_reshape_sub_filter_add_zero = []
             for i in range(coe_reshape_add_zero.shape[0]):
                 # print(coe_reshape_add_zero[i])
                 # print(coe_reshape_add_zero[i].shape)
                 # print(np.reshape(coe_reshape_add_zero[i], (y, -1), order='F'))
-                coe_reshape_sub_filter_add_zero.append(np.reshape(coe_reshape_add_zero[i], (y, -1), order='F'))
+                try:
+                    coe_reshape_sub_filter_add_zero.append(np.reshape(coe_reshape_add_zero[i], (y, -1), order='F'))
+                except ValueError as e:
+                    # print(f"Error occurs: {e}")
+                    import tkinter
+                    from tkinter import messagebox
+
+                    root = tkinter.Tk()
+                    root.withdraw()  # 隐藏主窗口
+                    messagebox.showinfo("滤波器抽头数错误提醒", "Please try another TAPS, like multiples of D")
+                    assert False, "Please try another TAPS, like multiples of D"
             cur_coll = 1
             # print(coe_reshape_sub_filter_add_zero)
             np_coe_reshape_sub_filter_add_zero = np.array(coe_reshape_sub_filter_add_zero)
@@ -649,8 +621,8 @@ def compare_pfb(np_data, TAPS, CHANNEL_NUM, D):
     dx_ospfb_rotate = circular_rotate(dx_ospfb_out, CHANNEL_NUM, D)
     dx_ospfb_cut = cut_extra_channel_data_by_tail(np.fft.fft(np.fft.ifft(dx_ospfb_rotate, axis=0)), CHANNEL_NUM,
                                                   D) * D / M
-    print("dx_ospfb_cut:\n",dx_ospfb_cut)
-    dx_ospfb_consist = consist_all_subband(np.fft.ifft(dx_ospfb_cut),M)
+    # print("dx_ospfb_cut:\n",dx_ospfb_cut)
+    # dx_ospfb_consist = consist_all_subband(np.fft.ifft(dx_ospfb_cut),M)
 
 def reset_save_data():
     np.savetxt('txt/dx_pfb_exe_output.txt', [])
@@ -776,20 +748,20 @@ def coherent_dedispersion(TAPS, CHANNEL_NUM, D):
                              :int(result_consist_pol2.size / 2)]
                     plt.plot(plot_data_pol2, label="2x IOSC Pol 2")
                     plt.plot(plot_data_pol1, label="2x IOSC Pol 1")
-                    np.savetxt("txt/Ospfb2x_pol1_block0_data_8tap.txt", plot_data_pol1)
-                    np.savetxt("txt/Ospfb2x_pol2_block0_data_8tap.txt", plot_data_pol2)
+                    # np.savetxt("txt/Ospfb2x_pol1_block0_data_8tap.txt", plot_data_pol1)
+                    # np.savetxt("txt/Ospfb2x_pol2_block0_data_8tap.txt", plot_data_pol2)
                     plt.legend(prop={'size': 14})
                     plt.yticks([0.0, 0.65e6, 1.3e6], [0, 0.5, 1], size=14)
                     plt.xticks([0, 16384], [1582, 1182], size=14)
                     plt.xlabel('Frequency (MHz)', size=14)
                     plt.ylabel('Normalized Amplitude', size=14)
-                    plt.savefig("img/imag_after_cutff/1024/ospfb2x_4channel_8tap.jpg", dpi=400)
+                    # plt.savefig("img/imag_after_cutff/1024/ospfb2x_4channel_8tap.jpg", dpi=400)
                     plt.show()
 
                     os._exit()
 
                 print("PFB done, use ", time.time() - cur_spend_time, " seconds, all spend ",
-                      time.time() - start_time, " seco nds")
+                      time.time() - start_time, " seconds")
                 cur_spend_time = time.time()
 
                 psr.coherent_dedispersion_cspfb2(subfreq1, subfreq2, CHANNEL_NUM, pdata, pnum,
@@ -847,14 +819,14 @@ def coherent_dedispersion(TAPS, CHANNEL_NUM, D):
                              :int(result_consist_pol2.size / 2)]
                     plt.plot(plot_data_pol2, label="CSC Pol 2")
                     plt.plot(plot_data_pol1, label="CSC Pol 1")
-                    np.savetxt("txt/Cspfb_pol1_block0_data_8tap.txt", plot_data_pol1)
-                    np.savetxt("txt/Cspfb_pol2_block0_data_8tap.txt", plot_data_pol2)
+                    # np.savetxt("txt/Cspfb_pol1_block0_data_8tap.txt", plot_data_pol1)
+                    # np.savetxt("txt/Cspfb_pol2_block0_data_8tap.txt", plot_data_pol2)
                     plt.yticks([0.0, 0.65e6, 1.3e6], [0, 0.5, 1],size=14)
                     plt.xticks([0, 16384], [1582, 1182],size=14)
                     plt.xlabel('Frequency (MHz)', size=14)
                     plt.ylabel('Normalized Amplitude', size=14)
                     plt.legend(prop={'size': 14})
-                    plt.savefig("img/imag_after_cutff/1024/cspfb_4channel_8tap.jpg",dpi=400)
+                    # plt.savefig("img/imag_after_cutff/1024/cspfb_4channel_8tap.jpg",dpi=400)
                     plt.show()
 
                     os._exit()
@@ -907,43 +879,48 @@ def coherent_dedispersion(TAPS, CHANNEL_NUM, D):
 
 
 if __name__ == '__main__':
-    conv()
-
-    TAPS = 63
+    # conv()
+    # filter taps:
+    TAPS = 6
+    # channel_num(branch), Number of frequency bands :
     CHANNEL_NUM = 4
+    # M equal channel_num(branch), more article call it M:
     M = CHANNEL_NUM
+    # Decimation factor
     D = 3
+    # if D = M : Critical polyphase filter bank(CSPFB)
+    # if M is multiples of D : Integer-oversample filter bank(IOSPFB)
+    # else if D < M : Rationally-oversampled filter bank(ROSPFB)
     print("----------------------------------start---------------------------------------")
     reset_save_data()
 
     # 1.测试PFB（支持临界采样、整数倍过采样、分数倍过采样，只需修改通道数CHANNEL_NUM和D抽取因子即可，TAPS为滤波器抽头数）:
-    data = []
-    for i in range(36):
-        data.append(i)
-    np_data = np.array(data)
-    print(np_data)
+    # data = []
+    # for i in range(36):
+    #     data.append(i)
+    # np_data = np.array(data)
+    # print(np_data)
     # circular_rotate(np_data, CHANNEL_NUM,D)
     # ////////////////////////////////////////////////////////////////////////
     np_data = np.loadtxt(r'PFB-main\PFB\mini_data.txt')
-    # plt.plot(np.abs(np.fft.fft(np_data)))
-    # plt.show()
+    plt.plot(np.abs(np.fft.fft(np_data)))
+    plt.show()
     np_data = add_rfi2(np_data, CHANNEL_NUM)
     plt.figure(figsize=(6, 5), dpi=400)
-    # plt.xticks([0, 6400,12800], [-1,0,1], size=14)
     plt.yticks([0, 40000,80000], [0,0.5,1], size=14)
     plt.xlabel('Sampling Points Number', size=14)
     plt.ylabel('Normalized Amplitude', size=14)
     plt.plot(np.abs(np.fft.fft(np_data)))
-    plt.savefig("img/imag_after_cutff/1117/before_pfb.jpg",dpi=400)
+    # plt.savefig("img/imag_after_cutff/1117/before_pfb.jpg",dpi=400)
     plt.show()
     compare_pfb(np_data, TAPS, CHANNEL_NUM, D)
     # ////////////////////////////////////////////////////////////////////////
 
     # 2.PFB并消色散，保存数据到profile中，需关闭测试代码
-    # coherent_dedispersion(TAPS, CHANNEL_NUM, D)
+    coherent_dedispersion(TAPS, CHANNEL_NUM, D)
 
     # 3.消色散后profile由当前目录的jupyter文件绘图，注意修改jupyter代码中的profile文件名（subospfb.txt/subcspfb.txt）
     # plot_profile.ipynb
     # plot_sub.ipynb
-
+    # plot_block_dtw.ipynb
     print("--------------------------------------------end------------------------------------------------------")
