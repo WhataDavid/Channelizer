@@ -5,8 +5,7 @@
 - Integer-oversampled channelizer
 - Rationally-oversampled channelizer
 ### Using them by modify M and D ###
-### More detail and information please access curent project's pypi website ###
-### Example: ###
+### Code Example: ###
 ```python
     # filter taps:
     TAPS = 63
@@ -26,4 +25,6 @@
     rotate_res = circular_rotate(filter_res, CHANNEL_NUM, D)
     cut_res = cut_extra_channel_data_by_tail(np.fft.fft(np.fft.ifft(rotate_res, axis=0)), CHANNEL_NUM,D) * D / M
 ```
-
+### Can also use it by ###
+```pip install channelizer```
+### More detail and information please access curent project's pypi website ###
