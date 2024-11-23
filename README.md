@@ -25,6 +25,7 @@
     rotate_res = circular_rotate(filter_res, CHANNEL_NUM, D)
     cut_res = cut_extra_channel_data_by_tail(np.fft.fft(np.fft.ifft(rotate_res, axis=0)), CHANNEL_NUM,D) * D / M
 ```
-### Can also use it by ###
+### Install ###
 ```pip install channelizer```
+Or clone code
 ### More detail and information please access curent project's pypi website ###
