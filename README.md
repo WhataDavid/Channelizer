@@ -9,7 +9,7 @@
 ### Example: ###
 ```python
     # filter taps:
-    TAPS = 6
+    TAPS = 63
     # channel_num(branch), Number of frequency bands :
     CHANNEL_NUM = 4
     # M equal channel_num(branch), more article call it M:
