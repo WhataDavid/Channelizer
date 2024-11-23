@@ -1,6 +1,9 @@
 # Channelizer
 ### For ultra bandwidth signal process ###
-### Supporting Critically sampled channelizer / Integer-oversampled channelizer / Rationally-oversampled channelizer ###
+### Supporting: ###
+- Critically sampled channelizer
+- Integer-oversampled channelizer
+- Rationally-oversampled channelizer
 ### Using them by modify M and D ###
 ### More detail and information please access curent project's pypi website ###
 ### Example: ###
@@ -11,3 +14,4 @@
     cut_res = cut_extra_channel_data_by_tail(np.fft.fft(np.fft.ifft(dx_ospfb_rotate, axis=0)), CHANNEL_NUM,
                                                D) * D / M
 ```
+
