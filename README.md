@@ -20,7 +20,7 @@
     # if M is multiples of D : Integer-oversample filter bank(IOSPFB)
     # else if D < M : Rationally-oversampled filter bank(ROSPFB)
 
-    np_data = np.loadtxt(r'PFB-main\PFB\mini_data.txt')
+    np_data = np.loadtxt(r'\mini_data.txt')
     coe = realignment_coe(TAPS, CHANNEL_NUM, D)
     filter_res = polyphase_filter_bank_with_denominator_z(np_data, coe, CHANNEL_NUM, D)
     rotate_res = circular_rotate(filter_res, CHANNEL_NUM, D)
