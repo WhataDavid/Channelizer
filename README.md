@@ -21,11 +21,24 @@
 
     np_data = np.loadtxt(r'\mini_data.txt')
     coe = realignment_coe(TAPS, CHANNEL_NUM, D)
-    filter_res = polyphase_filter_bank_with_denominator_z(np_data, coe, CHANNEL_NUM, D)
-    rotate_res = circular_rotate(filter_res, CHANNEL_NUM, D)
+    polyphase_filter_res = polyphase_filter_bank_with_denominator_z(np_data, coe, CHANNEL_NUM, D)
+    fft_res = np.fft.ifft(polyphase_filter_res, axis=0)
+    plot_sub(fft_res, CHANNEL_NUM, "DX " + str(CHANNEL_NUM) + "/" + str(D) + "X channelizer with z gcd result:")
+    
+    coe = realignment_coe(TAPS, CHANNEL_NUM, D)
+    polyphase_filter_res = polyphase_filter_bank_with_denominator_z(np_data, coe, CHANNEL_NUM, D)
+    rotate_res = circular_rotate(polyphase_filter_res, CHANNEL_NUM, D)
+    fft_res = np.fft.ifft(rotate_res, axis=0)
+    plot_sub(fft_res, CHANNEL_NUM,"DX " + str(CHANNEL_NUM) + "/" + str(D) + "X channelizer with z gcd and rotate result:")
+    
+    coe = realignment_coe(TAPS, CHANNEL_NUM, D)
+    polyphase_filter_res = polyphase_filter_bank_with_denominator_z(np_data, coe, CHANNEL_NUM, D)
+    rotate_res = circular_rotate(polyphase_filter_res, CHANNEL_NUM, D)
     cut_res = cut_extra_channel_data_by_tail(np.fft.fft(np.fft.ifft(rotate_res, axis=0)), CHANNEL_NUM,D) * D / M
+    plot_sub(np.fft.ifft(cut_res), CHANNEL_NUM,"DX " + str(CHANNEL_NUM) + "/" + str(D) + "X channelizer with z gcd rotate and cut result:")
 ```
 ### Install ###
 ```pip install channelizer```
+
 Or clone code
 ### More detail and information please access curent project's pypi website ###
