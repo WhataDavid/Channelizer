@@ -7,6 +7,8 @@
 ### Using them by modify M and D ###
 ### Code Example: ###
 ```python
+    import channelizers
+
     # filter taps:
     TAPS = 63
     # channel_num(branch), Number of frequency bands :
@@ -38,7 +40,7 @@
     plot_sub(np.fft.ifft(cut_res), CHANNEL_NUM,"DX " + str(CHANNEL_NUM) + "/" + str(D) + "X channelizer with z gcd rotate and cut result:")
 ```
 ### Install ###
-```pip install channelizer```
+```pip install channelizers```
 
 Or clone code
 ### More detail and information please access curent project's pypi website ###
