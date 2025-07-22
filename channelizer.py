@@ -44,6 +44,10 @@ def reset_save_data():
 def plot_sub(data, CHANNEL_NUM,D, title,cut=True):
     plt.figure(figsize=(12, 16), dpi=400)
     sub_bangwidth = 800//CHANNEL_NUM
+
+    data = np.concatenate((data, np.zeros_like(data)), axis=1)
+    data = np.concatenate((data, np.zeros_like(data)), axis=1)
+
     for i in range(CHANNEL_NUM//2):
         plt.subplot(CHANNEL_NUM//2, 1, i + 1)
         # 调整子图之间的间距
@@ -288,7 +292,7 @@ def realignment_coe(numtaps, M, D):
     # print("======================realignment_coe function==========================")
     coe = []
     for i in range(numtaps*M):
-        coe.append(100 + i)
+        coe.append(101 + i)
     # coe.extend(list(reversed(coe)))
 
     win_coeffs = scipy.signal.get_window("hamming", numtaps * M)
@@ -328,7 +332,7 @@ def realignment_coe(numtaps, M, D):
             coe_reshape_add_zero = np.zeros((rows, cols * x - x + 1), dtype=coe_reshape.dtype)
             for i in range(rows):
                 coe_reshape_add_zero[i, ::x] = coe_reshape[i]
-            # print("+++++++++++++++++++++4/3  coe_reshape_add_zero\n", coe_reshape_add_zero)
+            print("+++++++++++++++++++++4/3  coe_reshape_add_zero\n", coe_reshape_add_zero)
             # GSC add zero code end
             # print(coe_reshape_add_zero.shape)
             coe_reshape_sub_filter_add_zero = []
@@ -352,10 +356,10 @@ def realignment_coe(numtaps, M, D):
                     messagebox.showinfo("滤波器抽头数错误提醒", "Please try another TAPS, like multiples of D")
                     assert False, "Please try another TAPS, like multiples of D"
             cur_coll = 1
-            # print(coe_reshape_sub_filter_add_zero)
+            print(coe_reshape_sub_filter_add_zero)
             np_coe_reshape_sub_filter_add_zero = np.array(coe_reshape_sub_filter_add_zero)
             # print(np_coe_reshape_sub_filter_add_zero.shape[2])
-            # print("np_coe_reshape_sub_filter_add_zero\n", np_coe_reshape_sub_filter_add_zero)
+            print("np_coe_reshape_sub_filter_add_zero\n", np_coe_reshape_sub_filter_add_zero)
             # print("//////////////////////////////////////reduce dim//////////////////////////////////////")
             np_coe_reshape_sub_filter_add_zero = np_coe_reshape_sub_filter_add_zero.reshape(M * y,
                                                                                             np_coe_reshape_sub_filter_add_zero.shape[
@@ -440,24 +444,26 @@ def realignment_data_with_z_gcd(data, channel_num, D):
     # print("data:\n",data)
     x, y = get_denominator(channel_num, D)
     gcd = math.gcd(channel_num, D)
-    # print("gcd=", gcd)
+    print("gcd=", gcd)
     polyphase_data = np.zeros((channel_num, y, realignment_data_without_add0(data, channel_num, D).shape[1]),
                               dtype=np.complex64)
     # print("polyphase_data:before for\n",polyphase_data)
     for i in range(y):
-        # print("\n", i)
+        print("\n", i)
         cur_data_wait_realign = np.concatenate((data[i*gcd:], np.zeros(i * gcd)))
         # cur_data_wait_realign = np.concatenate((data[i*M:], np .zeros(i*M)))
         # print(cur_data_wait_realign.shape)
-        # print("cur_data_wait_realign:\n",cur_data_wait_realign)
+        print("cur_data_wait_realign:\n",cur_data_wait_realign)
         cur_data = realignment_data_without_add0(cur_data_wait_realign, channel_num, D)
+        print("cur_data_after_realign:\n", cur_data)
         cur_data = np.flipud(cur_data)
         # print("cur_data after flipud:\n",cur_data)
         for j in range(cur_data.shape[0]):
             # print(cur_data.shape, " ", channel_num - j - 1, " ", y - 1 - i, " ", j)
             polyphase_data[channel_num - j - 1][y - 1 - i] = cur_data[j]
         # print("polyphase_data_all\n", polyphase_data)
-    # print("polyphase_data:after for\n", polyphase_data)
+    print("\n")
+    print("polyphase_data:after for\n", polyphase_data)
     return polyphase_data
 
 
@@ -490,25 +496,27 @@ def polyphase_filter_bank_with_denominator_z(data, filter_coeffs, channel_num, D
         # print("----------------------------------after flipud-----------------------------------")
         # print("polyphase_data1\n", polyphase_data2)
         polyphase_data2 = polyphase_data2.reshape(M * y, polyphase_data2.shape[2])
-        # print("polyphase_data2\n", polyphase_data2)
+        print("\n\npolyphase_data2\n", polyphase_data2)
+        print("polyphase_data2 shape\n", polyphase_data2.shape)
+        # sys.exit()
         # print(filter_coeffs)
         filt_data_conv = []
         final_filt_result = []
         start_time = time.time()
         for k in range(channel_num * y):
-            # print("\n", k)
-            # print("cur polyphase_data_sub:\n", polyphase_data2[k])
-            # print("cur filter_coeffs:\n", filter_coeffs[k])
+            print("\n", k)
+            print("cur polyphase_data_sub:\n", polyphase_data2[k])
+            print("cur filter_coeffs:\n", filter_coeffs[k])
             filt_data_conv.append(np.convolve(polyphase_data2[k], filter_coeffs[k]))
             # filt_data_conv.append(scipy.signal.lfilter(filter_coeffs[k], 1, polyphase_data2[k]))
-            # print("filt_data_conv\n", filt_data_conv[k % y])
-            # print()
+            print("filt_data_conv\n", filt_data_conv[k % y])
+            print()
             if (k + 1) % y == 0:
-                # print("add all array for :\n", filt_data_conv)
+                print("add all array for :\n", filt_data_conv)
                 final_filt_result.append(sum(filt_data_conv))
                 filt_data_conv.clear()
-                # print("final filt result of add all conv result")
-                # print(final_filt_result)
+                print("final filt result of add all conv result")
+                print(final_filt_result)
         # print("\nall final filt result of add all conv result\n", final_filt_result)
         # dispatch_data_conv = scipy.fft.ifft(final_filt_result, axis=0)
         # print("PFB result_data.shape:", final_filt_result.shape)
@@ -824,7 +832,7 @@ def compare_pfb(np_data, TAPS, CHANNEL_NUM, D):
 
 
     dx_ospfb_coe = realignment_coe(TAPS, CHANNEL_NUM, D)
-    # print("dxcoe\n", dx_ospfb_coe)
+    print("dxcoe\n", dx_ospfb_coe.real)
     dx_ospfb_out = polyphase_filter_bank_with_denominator_z(np_data, dx_ospfb_coe, CHANNEL_NUM, D)
 
     dx_ospfb_fft = np.fft.ifft(dx_ospfb_out, axis=0)
@@ -841,6 +849,7 @@ def compare_pfb(np_data, TAPS, CHANNEL_NUM, D):
     # print("dx_ospfb_fft\n", dx_ospfb_fft)
     plot_sub(dx_ospfb_fft, CHANNEL_NUM,D,
              "DX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd and rotate result:",cut=False)
+
     #
     # print("\nDX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd rotate and cut result:")
     dx_ospfb_coe = realignment_coe(TAPS, CHANNEL_NUM, D)
@@ -853,12 +862,13 @@ def compare_pfb(np_data, TAPS, CHANNEL_NUM, D):
     plot_sub(np.fft.ifft(dx_ospfb_cut), CHANNEL_NUM,D,
              "DX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd and rotate cut result:",cut=True)
 
-    # print("\nDX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd rotate cut and consist result:")
+    print("\nDX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd rotate cut and consist result:")
     start_time = time.time()
     dx_ospfb_coe = realignment_coe(TAPS, CHANNEL_NUM, D)
     print(dx_ospfb_coe)
     print("time:", time.time() - start_time)
     dx_ospfb_out = polyphase_filter_bank_with_denominator_z(np_data, dx_ospfb_coe, CHANNEL_NUM, D)
+    sys.exit()
     print("time:", time.time() - start_time)
     dx_ospfb_rotate = circular_rotate(dx_ospfb_out, CHANNEL_NUM, D)
     dx_ospfb_cut = cut_extra_channel_data_by_tail(np.fft.fft(np.fft.ifft(dx_ospfb_rotate, axis=0)), CHANNEL_NUM,
@@ -960,13 +970,13 @@ def save_cus_data():
 if __name__ == '__main__':
     # conv()
     # filter taps:
-    TAPS = 4
+    TAPS = 333
     # channel_num(branch), Number of frequency bands :
-    CHANNEL_NUM = 8
+    CHANNEL_NUM = 4
     # M equal channel_num(branch), more article call it M:
     M = CHANNEL_NUM
     # Decimation factor
-    D = 6
+    D = 3
     # if D = M : Critical polyphase filter bank(CSPFB)
     # if M is multiples of D : Integer-oversample filter bank(IOSPFB)
     # else if D < M : Rationally-oversampled filter bank(ROSPFB)
@@ -974,10 +984,10 @@ if __name__ == '__main__':
     reset_save_data()
 
     # 1.测试PFB（支持临界采样、整数倍过采样、分数倍过采样，只需修改通道数CHANNEL_NUM和D抽取因子即可，TAPS为滤波器抽头数）:
-    # data = []
-    # for i in range(40):
-    #     data.append(i)
-    # np_data = np.array(data)
+    data = []
+    for i in range(0,12):
+        data.append(i)
+    np_data = np.array(data)
     # print(np_data)
     # circular_rotate(np_data, CHANNEL_NUM,D)
     # print(np_data)
@@ -985,14 +995,14 @@ if __name__ == '__main__':
     # 获取当前模块的目录
     module_dir = os.path.dirname(__file__)
     # 构建 data.json 文件的完整路径
-    data_file_path = os.path.join(module_dir, 'mini_data.txt')
+    # data_file_path = os.path.join(module_dir, 'mini_data.txt')
     np_data = np.loadtxt(r'PFB-main\PFB\mini_data.txt')
     # np_data = np.loadtxt(r'data/astro_data2^19.txt')
     print(np_data.shape,np_data)
     plt.plot(np.abs(np.fft.fft(np_data)))
     plt.show()
     np_data = add_rfi2(np_data, CHANNEL_NUM)
-    print(np_data.shape,np_data)
+    # print(np_data.shape,np_data)
     np.savetxt('txt/mini_data_complex.txt', np_data)
     plt.figure(figsize=(8, 8), dpi=400)
     # 计算该通道数据的傅里叶变换
