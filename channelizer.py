@@ -55,8 +55,8 @@ def plot_sub(data, CHANNEL_NUM,D, title,cut=True):
         # 调整子图之间的间距
         plt.subplots_adjust(hspace=1)  # 增加垂直间距
         # 计算该通道数据的傅里叶变换
-        fft_data = np.abs(np.fft.fft(data[i], axis=0))
-        # fft_data = np.abs(np.fft.fftshift(np.fft.fft(data[i], axis=0)))
+        # fft_data = np.abs(np.fft.fft(data[i], axis=0))
+        fft_data = np.abs(np.fft.fftshift(np.fft.fft(data[i], axis=0)))
 
         # # 计算最大值和最大值的一半
         # max_val = np.max(fft_data)
@@ -298,16 +298,16 @@ def realignment_coe(numtaps, M, D):
         coe.append(101 + i)
     # coe.extend(list(reversed(coe)))
 
-    win_coeffs = scipy.signal.get_window("hamming", numtaps * M)
-    sinc = scipy.signal.firwin(numtaps * M, cutoff=1.0 / D, window="boxcar")
-    coe = np.zeros(win_coeffs.shape[0], dtype=np.complex128)  # 使用更高精度的数据类型
-    for i in range(coe.shape[0]):
-        coe[i] = sinc[i] * win_coeffs[i]
-    nv = np.arange(numtaps * M)
-    for i in range(coe.shape[0]):
-        coe[i] *= np.exp(1j * np.pi * nv[i] / M)
+    # win_coeffs = scipy.signal.get_window("hamming", numtaps * M)
+    # sinc = scipy.signal.firwin(numtaps * M, cutoff=1.0 / D, window="boxcar")
+    # coe = np.zeros(win_coeffs.shape[0], dtype=np.complex128)  # 使用更高精度的数据类型
+    # for i in range(coe.shape[0]):
+    #     coe[i] = sinc[i] * win_coeffs[i]
+    # nv = np.arange(numtaps * M)
+    # for i in range(coe.shape[0]):
+    #     coe[i] *= np.exp(1j * np.pi * nv[i] / M)
 
-    # coe = scipy.signal.firwin(M*numtaps, cutoff=1.0 / D, window=("kaiser", 6))
+    coe = scipy.signal.firwin(M*numtaps, cutoff=1.0 / D, window=("kaiser", 6))
 
     coe_reshape = np.reshape(coe, (M, -1), order='F')
     print(coe_reshape)
