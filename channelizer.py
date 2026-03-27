@@ -10,6 +10,8 @@ from collections import deque
 import psr
 import time
 from datetime import datetime
+import cspfb
+import opfb
 
 
 # 创建 Logger 实例并重定向 sys.stdout
@@ -42,70 +44,71 @@ def reset_save_data():
 
 
 def plot_sub(data, CHANNEL_NUM,D, title,cut=True):
-    plt.figure(figsize=(12, 16), dpi=400)
+    plt.figure(figsize=(12, 24), dpi=400)
     sub_bangwidth = 800//CHANNEL_NUM
 
     data = np.concatenate((data, np.zeros_like(data)), axis=1)
     data = np.concatenate((data, np.zeros_like(data)), axis=1)
 
-    for i in range(CHANNEL_NUM//2):
-        plt.subplot(CHANNEL_NUM//2, 1, i + 1)
+    for i in range(CHANNEL_NUM):
+        plt.subplot(CHANNEL_NUM, 1, i + 1)
         # 调整子图之间的间距
         plt.subplots_adjust(hspace=1)  # 增加垂直间距
         # 计算该通道数据的傅里叶变换
         fft_data = np.abs(np.fft.fft(data[i], axis=0))
+        # fft_data = np.abs(np.fft.fftshift(np.fft.fft(data[i], axis=0)))
 
-        # 计算最大值和最大值的一半
-        max_val = np.max(fft_data)
-        half_max_val = max_val / 2
-        # 绘制频谱
+        # # 计算最大值和最大值的一半
+        # max_val = np.max(fft_data)
+        # half_max_val = max_val / 2
+        # # 绘制频谱
         plt.plot(fft_data)
-        # 设置 y 轴刻度为最大值的一半和最大值
-        plt.yticks([0, half_max_val, max_val], [0, 0.5, 1], size=14)
-        max_val = len(fft_data)
-        half_max_val = max_val / 2
-
-        x,y = get_denominator(M,D)
-        overlap_frequency = int((x/y-1)*400/CHANNEL_NUM*2)
-        if cut==True:
-            overlap_frequency = 0
-        # print("overlap_frequency:",overlap_frequency)
-        if CHANNEL_NUM%2==1:
-            offset = 0
-            if 800 % CHANNEL_NUM != 0:
-                offset = 1
-            if i < CHANNEL_NUM // 2:
-                left_label = 1182 + sub_bangwidth * i
-                right_label = 1182 + sub_bangwidth * (i + 1)  +overlap_frequency
-                mid_label = (left_label + right_label) // 2
-                plt.xticks([0, half_max_val, max_val], [left_label, mid_label, right_label], size=14)
-            elif i==CHANNEL_NUM // 2:
-                left_label = 1182 + sub_bangwidth * i
-                right_label = 1182 + sub_bangwidth * i-overlap_frequency
-                mid_label = 1582
-                plt.xticks([0, half_max_val, max_val], [left_label, mid_label, right_label],
-                           size=14)
-            else:
-                left_label = 1582 - sub_bangwidth * (i - (CHANNEL_NUM // 2))+sub_bangwidth//2
-                right_label = 1582 - sub_bangwidth * (i - (CHANNEL_NUM // 2)) - sub_bangwidth - offset+sub_bangwidth//2-overlap_frequency
-                mid_label = (left_label + right_label) // 2
-                plt.xticks([0, half_max_val, max_val], [left_label, mid_label, right_label],
-                           size=14)
-        if CHANNEL_NUM%2==0:
-            offset=0
-            if 800%CHANNEL_NUM!=0:
-                offset=1
-            if i<CHANNEL_NUM//2:
-                left_label=1182+sub_bangwidth*i
-                right_label=1182+sub_bangwidth*(i+1)+overlap_frequency
-                mid_label = (left_label+ right_label)//2
-                plt.xticks([0, half_max_val, max_val], [left_label, mid_label, right_label], size=14)
-            else:
-                left_label=1582 - sub_bangwidth * (i-(CHANNEL_NUM//2))-offset
-                right_label=1582 - sub_bangwidth * (i-(CHANNEL_NUM//2))-sub_bangwidth-overlap_frequency-offset
-                mid_label = (left_label+ right_label)//2
-                plt.xticks([0, half_max_val, max_val], [left_label, mid_label, right_label],
-                           size=14)
+        # # 设置 y 轴刻度为最大值的一半和最大值
+        # plt.yticks([0, half_max_val, max_val], [0, 0.5, 1], size=14)
+        # max_val = len(fft_data)
+        # half_max_val = max_val / 2
+        #
+        # x,y = get_denominator(M,D)
+        # overlap_frequency = int((x/y-1)*400/CHANNEL_NUM*2)
+        # if cut==True:
+        #     overlap_frequency = 0
+        # # print("overlap_frequency:",overlap_frequency)
+        # if CHANNEL_NUM%2==1:
+        #     offset = 0
+        #     if 800 % CHANNEL_NUM != 0:
+        #         offset = 1
+        #     if i < CHANNEL_NUM // 2:
+        #         left_label = 1182 + sub_bangwidth * i
+        #         right_label = 1182 + sub_bangwidth * (i + 1)  +overlap_frequency
+        #         mid_label = (left_label + right_label) // 2
+        #         plt.xticks([0, half_max_val, max_val], [left_label, mid_label, right_label], size=14)
+        #     elif i==CHANNEL_NUM // 2:
+        #         left_label = 1182 + sub_bangwidth * i
+        #         right_label = 1182 + sub_bangwidth * i-overlap_frequency
+        #         mid_label = 1582
+        #         plt.xticks([0, half_max_val, max_val], [left_label, mid_label, right_label],
+        #                    size=14)
+        #     else:
+        #         left_label = 1582 - sub_bangwidth * (i - (CHANNEL_NUM // 2))+sub_bangwidth//2
+        #         right_label = 1582 - sub_bangwidth * (i - (CHANNEL_NUM // 2)) - sub_bangwidth - offset+sub_bangwidth//2-overlap_frequency
+        #         mid_label = (left_label + right_label) // 2
+        #         plt.xticks([0, half_max_val, max_val], [left_label, mid_label, right_label],
+        #                    size=14)
+        # if CHANNEL_NUM%2==0:
+        #     offset=0
+        #     if 800%CHANNEL_NUM!=0:
+        #         offset=1
+        #     if i<CHANNEL_NUM//2:
+        #         left_label=1182+sub_bangwidth*i
+        #         right_label=1182+sub_bangwidth*(i+1)+overlap_frequency
+        #         mid_label = (left_label+ right_label)//2
+        #         plt.xticks([0, half_max_val, max_val], [left_label, mid_label, right_label], size=14)
+        #     else:
+        #         left_label=1582 - sub_bangwidth * (i-(CHANNEL_NUM//2))-offset
+        #         right_label=1582 - sub_bangwidth * (i-(CHANNEL_NUM//2))-sub_bangwidth-overlap_frequency-offset
+        #         mid_label = (left_label+ right_label)//2
+        #         plt.xticks([0, half_max_val, max_val], [left_label, mid_label, right_label],
+        #                    size=14)
         # 设置坐标轴标签
         plt.xlabel('Frequency(MHz)', size=14)
         plt.ylabel('Normalized Amplitude', size=14)
@@ -155,11 +158,11 @@ def add_rfi2(data, channel_num):
         for j in range(i):
             # freq[freq_num * (i - 1) + step * (j + 1)] = (j+i+1) * 1e4
             # freq[freq_num * (i - 1) + step * (j + 1)] = j+ 1e4
-            freq[freq_num * (i - 1) + step * (j + 1)] = 1e6
+            freq[freq_num * (i - 1) + step * (j + 1)] = 1e5
         for k in range(i):
-            # freq[freq.shape[0] - freq_num * (i) + step * (k + 1)] = (2*i-k) * 1e4
+            freq[freq.shape[0] - freq_num * (i) + step * (k + 1)] = (2*i-k) * 1e4
             # freq[freq.shape[0] - freq_num * (i) + step * (k + 1)] = (i - k - 1) + 1e4
-            freq[freq.shape[0] - freq_num * (i) + step * (k + 1)] = 1e6
+            # freq[freq.shape[0] - freq_num * (i) + step * (k + 1)] = 1e6
     # return np.fft.ifft(freq[0:int((len(freq)/2))])
     return np.fft.ifft(freq)
     # return np.fft.ifft(freq).real
@@ -303,6 +306,9 @@ def realignment_coe(numtaps, M, D):
     nv = np.arange(numtaps * M)
     for i in range(coe.shape[0]):
         coe[i] *= np.exp(1j * np.pi * nv[i] / M)
+
+    # coe = scipy.signal.firwin(M*numtaps, cutoff=1.0 / D, window=("kaiser", 6))
+
     coe_reshape = np.reshape(coe, (M, -1), order='F')
     print(coe_reshape)
     if M == D:
@@ -332,7 +338,7 @@ def realignment_coe(numtaps, M, D):
             coe_reshape_add_zero = np.zeros((rows, cols * x - x + 1), dtype=coe_reshape.dtype)
             for i in range(rows):
                 coe_reshape_add_zero[i, ::x] = coe_reshape[i]
-            print("+++++++++++++++++++++4/3  coe_reshape_add_zero\n", coe_reshape_add_zero)
+            # print("+++++++++++++++++++++4/3  coe_reshape_add_zero\n", coe_reshape_add_zero)
             # GSC add zero code end
             # print(coe_reshape_add_zero.shape)
             coe_reshape_sub_filter_add_zero = []
@@ -359,7 +365,7 @@ def realignment_coe(numtaps, M, D):
             print(coe_reshape_sub_filter_add_zero)
             np_coe_reshape_sub_filter_add_zero = np.array(coe_reshape_sub_filter_add_zero)
             # print(np_coe_reshape_sub_filter_add_zero.shape[2])
-            print("np_coe_reshape_sub_filter_add_zero\n", np_coe_reshape_sub_filter_add_zero)
+            # print("np_coe_reshape_sub_filter_add_zero\n", np_coe_reshape_sub_filter_add_zero)
             # print("//////////////////////////////////////reduce dim//////////////////////////////////////")
             np_coe_reshape_sub_filter_add_zero = np_coe_reshape_sub_filter_add_zero.reshape(M * y,
                                                                                             np_coe_reshape_sub_filter_add_zero.shape[
@@ -444,26 +450,26 @@ def realignment_data_with_z_gcd(data, channel_num, D):
     # print("data:\n",data)
     x, y = get_denominator(channel_num, D)
     gcd = math.gcd(channel_num, D)
-    print("gcd=", gcd)
+    # print("gcd=", gcd)
     polyphase_data = np.zeros((channel_num, y, realignment_data_without_add0(data, channel_num, D).shape[1]),
                               dtype=np.complex64)
     # print("polyphase_data:before for\n",polyphase_data)
     for i in range(y):
-        print("\n", i)
+        # print("\n", i)
         cur_data_wait_realign = np.concatenate((data[i*gcd:], np.zeros(i * gcd)))
         # cur_data_wait_realign = np.concatenate((data[i*M:], np .zeros(i*M)))
         # print(cur_data_wait_realign.shape)
-        print("cur_data_wait_realign:\n",cur_data_wait_realign)
+        # print("cur_data_wait_realign:\n",cur_data_wait_realign)
         cur_data = realignment_data_without_add0(cur_data_wait_realign, channel_num, D)
-        print("cur_data_after_realign:\n", cur_data)
+        # print("cur_data_after_realign:\n", cur_data)
         cur_data = np.flipud(cur_data)
         # print("cur_data after flipud:\n",cur_data)
         for j in range(cur_data.shape[0]):
             # print(cur_data.shape, " ", channel_num - j - 1, " ", y - 1 - i, " ", j)
             polyphase_data[channel_num - j - 1][y - 1 - i] = cur_data[j]
         # print("polyphase_data_all\n", polyphase_data)
-    print("\n")
-    print("polyphase_data:after for\n", polyphase_data)
+    # print("\n")
+    # print("polyphase_data:after for\n", polyphase_data)
     return polyphase_data
 
 
@@ -472,11 +478,11 @@ def polyphase_filter_bank_with_denominator_z(data, filter_coeffs, channel_num, D
     # print(data)
     M=channel_num
     if M / D == int(M / D):
-        print("filter directly ")
+        # print("filter directly ")
         print(filter_coeffs)
         polyphase_data = realignment_data_without_add0(data, channel_num, D)
         # polyphase_data = np.flipud(polyphase_data)
-        print("polyphase_data after relignment\n", polyphase_data)
+        # print("polyphase_data after relignment\n", polyphase_data)
         # print("dx polyphase_data after relignment: ", polyphase_data)
         filt_data_conv = []
         # print("-------------------------------------------for-------------------------------")
@@ -489,34 +495,34 @@ def polyphase_filter_bank_with_denominator_z(data, filter_coeffs, channel_num, D
         # dispatch_data_conv = scipy.fft.ifft(filt_data_conv, axis=0)
         return filt_data_conv
     else:
-        print("filter with sub filter")
+        # print("filter with sub filter")
         x, y = get_denominator(M, D)
         polyphase_data2 = realignment_data_with_z_gcd(data, channel_num, D)  # control data realignment method. *****
         # polyphase_data = np.flipud(polyphase_data)
         # print("----------------------------------after flipud-----------------------------------")
         # print("polyphase_data1\n", polyphase_data2)
         polyphase_data2 = polyphase_data2.reshape(M * y, polyphase_data2.shape[2])
-        print("\n\npolyphase_data2\n", polyphase_data2)
-        print("polyphase_data2 shape\n", polyphase_data2.shape)
+        # print("\n\npolyphase_data2\n", polyphase_data2)
+        # print("polyphase_data2 shape\n", polyphase_data2.shape)
         # sys.exit()
         # print(filter_coeffs)
         filt_data_conv = []
         final_filt_result = []
         start_time = time.time()
         for k in range(channel_num * y):
-            print("\n", k)
-            print("cur polyphase_data_sub:\n", polyphase_data2[k])
-            print("cur filter_coeffs:\n", filter_coeffs[k])
+            # print("\n", k)
+            # print("cur polyphase_data_sub:\n", polyphase_data2[k])
+            # print("cur filter_coeffs:\n", filter_coeffs[k])
             filt_data_conv.append(np.convolve(polyphase_data2[k], filter_coeffs[k]))
             # filt_data_conv.append(scipy.signal.lfilter(filter_coeffs[k], 1, polyphase_data2[k]))
-            print("filt_data_conv\n", filt_data_conv[k % y])
+            # print("filt_data_conv\n", filt_data_conv[k % y])
             print()
             if (k + 1) % y == 0:
-                print("add all array for :\n", filt_data_conv)
+                # print("add all array for :\n", filt_data_conv)
                 final_filt_result.append(sum(filt_data_conv))
                 filt_data_conv.clear()
-                print("final filt result of add all conv result")
-                print(final_filt_result)
+                # print("final filt result of add all conv result")
+                # print(final_filt_result)
         # print("\nall final filt result of add all conv result\n", final_filt_result)
         # dispatch_data_conv = scipy.fft.ifft(final_filt_result, axis=0)
         # print("PFB result_data.shape:", final_filt_result.shape)
@@ -819,26 +825,28 @@ def compare_pfb(np_data, TAPS, CHANNEL_NUM, D):
     # # print("zyzcoe\n", zyz_cspfb_coe)
     # zyz_cspfb_out = cspfb.polyphase_filter(np_data, zyz_cspfb_coe, CHANNEL_NUM)
     # # print("zyz_cspfb_out\n", zyz_cspfb_out)
-    # plot_sub(zyz_cspfb_out, CHANNEL_NUM, "ZYZ cspfb sub band of ")
+    # plot_sub(zyz_cspfb_out, CHANNEL_NUM, D,"ZYZ cspfb sub band of ")
 
     # print("\nZYZ ospfb result:")
     # zyz_ospfb_coe = opfb.gen_filter_coeffs(TAPS, CHANNEL_NUM)
     # print("zyzcoe\n", zyz_ospfb_coe)
     # zyz_ospfb_out = opfb.polyphase_filter(np_data, zyz_ospfb_coe, CHANNEL_NUM)
     # print("zyz_ospfb_out\n", zyz_ospfb_out)
-    # plot_sub(zyz_ospfb_out, CHANNEL_NUM, "ZYZ ospfb sub band of ")
-    #
-    # print("\nDX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd result:")
+    # plot_sub(zyz_ospfb_out, CHANNEL_NUM, D,"ZYZ ospfb sub band of ")
+
+
+
 
 
     dx_ospfb_coe = realignment_coe(TAPS, CHANNEL_NUM, D)
-    print("dxcoe\n", dx_ospfb_coe.real)
+    # print("dxcoe\n", dx_ospfb_coe.real)
     dx_ospfb_out = polyphase_filter_bank_with_denominator_z(np_data, dx_ospfb_coe, CHANNEL_NUM, D)
 
     dx_ospfb_fft = np.fft.ifft(dx_ospfb_out, axis=0)
     # print(dx_ospfb_fft.shape)
     # print("dx_ospfb_fft\n", dx_ospfb_fft)
     plot_sub(dx_ospfb_fft, CHANNEL_NUM,D, "DX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd result:",cut=False)
+
     #
     # print("\nDX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd and rotate result:")
     dx_ospfb_coe = realignment_coe(TAPS, CHANNEL_NUM, D)
@@ -850,8 +858,8 @@ def compare_pfb(np_data, TAPS, CHANNEL_NUM, D):
     plot_sub(dx_ospfb_fft, CHANNEL_NUM,D,
              "DX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd and rotate result:",cut=False)
 
-    #
-    # print("\nDX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd rotate and cut result:")
+
+    print("\nDX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd rotate and cut result:")
     dx_ospfb_coe = realignment_coe(TAPS, CHANNEL_NUM, D)
     dx_ospfb_out = polyphase_filter_bank_with_denominator_z(np_data, dx_ospfb_coe, CHANNEL_NUM, D)
     dx_ospfb_rotate = circular_rotate(dx_ospfb_out, CHANNEL_NUM, D)
@@ -862,21 +870,20 @@ def compare_pfb(np_data, TAPS, CHANNEL_NUM, D):
     plot_sub(np.fft.ifft(dx_ospfb_cut), CHANNEL_NUM,D,
              "DX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd and rotate cut result:",cut=True)
 
-    print("\nDX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd rotate cut and consist result:")
-    start_time = time.time()
-    dx_ospfb_coe = realignment_coe(TAPS, CHANNEL_NUM, D)
-    print(dx_ospfb_coe)
-    print("time:", time.time() - start_time)
-    dx_ospfb_out = polyphase_filter_bank_with_denominator_z(np_data, dx_ospfb_coe, CHANNEL_NUM, D)
-    sys.exit()
-    print("time:", time.time() - start_time)
-    dx_ospfb_rotate = circular_rotate(dx_ospfb_out, CHANNEL_NUM, D)
-    dx_ospfb_cut = cut_extra_channel_data_by_tail(np.fft.fft(np.fft.ifft(dx_ospfb_rotate, axis=0)), CHANNEL_NUM,
-                                                  D) * D / M
-    dx_ospfb_consist = consist_all_subband(np.fft.ifft(dx_ospfb_cut),M)
-    print("last")
-    print(dx_ospfb_consist.shape)
-    print(dx_ospfb_consist)
+    # print("\nDX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd rotate cut and consist result:")
+    # start_time = time.time()
+    # dx_ospfb_coe = realignment_coe(TAPS, CHANNEL_NUM, D)
+    # # print(dx_ospfb_coe)
+    # print("time:", time.time() - start_time)
+    # dx_ospfb_out = polyphase_filter_bank_with_denominator_z(np_data, dx_ospfb_coe, CHANNEL_NUM, D)
+    # print("time:", time.time() - start_time)
+    # dx_ospfb_rotate = circular_rotate(dx_ospfb_out, CHANNEL_NUM, D)
+    # dx_ospfb_cut = cut_extra_channel_data_by_tail(np.fft.fft(np.fft.ifft(dx_ospfb_rotate, axis=0)), CHANNEL_NUM,
+    #                                               D) * D / M
+    # dx_ospfb_consist = consist_all_subband(np.fft.ifft(dx_ospfb_cut),M)
+    # print("last")
+    # print(dx_ospfb_consist.shape)
+    # print(dx_ospfb_consist)
 
 
 def repeat_frequency():
@@ -886,7 +893,7 @@ def repeat_frequency():
     plt.plot(abs(np.fft.fft(np_data)))
     plt.show()
     print("np_data.shape", np_data.shape)
-    print(np_data)
+    # print(np_data)
     np_data = add_rfi2(np_data, 2)
     print(np_data.shape,np_data)
     cur_frequency_domain = np.fft.fft(np_data)
@@ -917,7 +924,7 @@ def repeat_frequency():
     plt.plot(abs(np.fft.fft(repeat_result_all)[:int(len(np.fft.fft(repeat_result_all)) / 2)]))
     plt.show()
 
-    np.savetxt('data/rfi_data_2g_complex.txt', repeat_result_all)
+    # np.savetxt('data/rfi_data_2g_complex.txt', repeat_result_all)
 
     cus_data = np.loadtxt('data/rfi_data_2g_complex.txt', dtype=np.complex64)
     plt.figure(figsize=(8, 8))
@@ -964,19 +971,20 @@ def save_cus_data():
             pol2[4 * index:4 * (index + 1)] = data[8 * index + 4:8 * (index + 1)]
 
         print(pol1.shape)
-        np.savetxt('./data/astro_data_104858.txt', pol1.real)
+        # np.savetxt('./data/astro_data_104858.txt', pol1.real)
         sys.exit()
+
 
 if __name__ == '__main__':
     # conv()
     # filter taps:
-    TAPS = 333
+    TAPS = 32
     # channel_num(branch), Number of frequency bands :
-    CHANNEL_NUM = 4
+    CHANNEL_NUM = 16
     # M equal channel_num(branch), more article call it M:
     M = CHANNEL_NUM
     # Decimation factor
-    D = 3
+    D = 12
     # if D = M : Critical polyphase filter bank(CSPFB)
     # if M is multiples of D : Integer-oversample filter bank(IOSPFB)
     # else if D < M : Rationally-oversampled filter bank(ROSPFB)
@@ -984,45 +992,218 @@ if __name__ == '__main__':
     reset_save_data()
 
     # 1.测试PFB（支持临界采样、整数倍过采样、分数倍过采样，只需修改通道数CHANNEL_NUM和D抽取因子即可，TAPS为滤波器抽头数）:
-    data = []
-    for i in range(0,12):
-        data.append(i)
-    np_data = np.array(data)
-    # print(np_data)
-    # circular_rotate(np_data, CHANNEL_NUM,D)
-    # print(np_data)
+    # data = []
+    # for i in range(0,12):
+    #     data.append(i)
+    # np_data = np.array(data)
+    # # print(np_data)
+    # # circular_rotate(np_data, CHANNEL_NUM,D)
+    # # print(np_data)
     # ////////////////////////////////////////////////////////////////////////
-    # 获取当前模块的目录
-    module_dir = os.path.dirname(__file__)
-    # 构建 data.json 文件的完整路径
-    # data_file_path = os.path.join(module_dir, 'mini_data.txt')
-    np_data = np.loadtxt(r'PFB-main\PFB\mini_data.txt')
-    # np_data = np.loadtxt(r'data/astro_data2^19.txt')
-    print(np_data.shape,np_data)
-    plt.plot(np.abs(np.fft.fft(np_data)))
-    plt.show()
-    np_data = add_rfi2(np_data, CHANNEL_NUM)
+    # # 使用真实数据：
+    # # 获取当前模块的目录
+    # module_dir = os.path.dirname(__file__)
+    # # 构建 data.json 文件的完整路径
+    # # data_file_path = os.path.join(module_dir, 'mini_data.txt')
+    # np_data = np.loadtxt(r'PFB-main\PFB\mini_data.txt')
+    # # np_data = np.loadtxt(r'data/astro_data2^19.txt')
     # print(np_data.shape,np_data)
-    np.savetxt('txt/mini_data_complex.txt', np_data)
-    plt.figure(figsize=(8, 8), dpi=400)
-    # 计算该通道数据的傅里叶变换
-    fft_data = np.abs(np.fft.fft(np_data))
-    # 计算横坐标最大值和最大值的一半
-    max_val = len(fft_data)
-    half_max_val = max_val / 2
-    plt.xticks([0, half_max_val,max_val], [1182,1382,1582], size=14)
-    # 计算纵坐标最大值和最大值的一半
-    max_val = np.max(fft_data)
-    half_max_val = max_val / 2
-    plt.yticks([0, half_max_val,max_val], [0,0.5,1], size=14)
-    plt.xlabel('Frequency(MHz)', size=14)
-    plt.ylabel('Normalized Amplitude', size=14)
-    plt.plot(fft_data)
-    # plt.savefig("img/20250112/before_pfb.pdf",dpi=400)
+    # plt.plot(np.abs(np.fft.fft(np_data)))
+    # plt.show()
+    # np_data = add_rfi2(np_data, CHANNEL_NUM)
+    # # print(np_data.shape,np_data)
+    # # np.savetxt('txt/mini_data_complex.txt', np_data)
+    # plt.figure(figsize=(8, 8), dpi=400)
+    # # 计算该通道数据的傅里叶变换
+    # fft_data = np.abs(np.fft.fft(np_data))
+    # # 计算横坐标最大值和最大值的一半
+    # # max_val = len(fft_data)
+    # # half_max_val = max_val / 2
+    # # plt.xticks([0, half_max_val,max_val], [1182,1382,1582], size=14)
+    # # # 计算纵坐标最大值和最大值的一半
+    # # max_val = np.max(fft_data)
+    # # half_max_val = max_val / 2
+    # # plt.yticks([0, half_max_val,max_val], [0,0.5,1], size=14)
+    # # plt.xlabel('Frequency(MHz)', size=14)
+    # # plt.ylabel('Normalized Amplitude', size=14)
+    # plt.plot(fft_data)
+    # # plt.savefig("img/20250112/before_pfb.pdf",dpi=400)
+    # plt.show()
+    # //////////////////////////////////////////////////////////////////////////
+    # 使用测试数据：
+    # 加载 example_complex.txt 文件并处理
+    file_path = r'csv\example_complex_87654321.txt'
+    # 读取文件内容，并转换为 float 类型数组
+    with open(file_path, 'r') as file:
+        data = [complex(line.strip()) for line in file if line.strip()]
+    # 转换为 numpy 数组以便后续处理
+    np_data = np.array(data).real
+    np_data = np_data[:2 ** 19]
+    plt.plot(np.abs(np.fft.fftshift(np.fft.fft(np_data))))
     plt.show()
-    compare_pfb(np_data, TAPS, CHANNEL_NUM, D)
+    # Ns = 2 ** 19  # DAC查找表大小
+    # # Ns = 2**16
+    # fs = 2.064e9
+    # # 计算FFT（单边谱）
+    # fft_complex = np.fft.fft(np_data.real)
+    # freqs_fft = np.fft.fftfreq(Ns, 1 / fs)  # 频率轴（含负频率）
+    # positive_freqs = freqs_fft[:Ns // 2]
+    #
+    # # 单边谱（仅正频率有意义）
+    # positive_complex = fft_complex[:Ns // 2]
+    # plt.subplot(1, 1, 1)
+    # plt.plot(positive_freqs, np.abs(positive_complex), 'm')
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.show()
+    # ////////////////////////////////////////////////////////////////////////使用张婷的数据
+    # def load_data(filename):
+    #     ptr = open(filename, "rb")
+    #     file_size = os.path.getsize(filename)
+    #     ptr.seek(4096, 0)
+    #     return ptr, file_size
+    #
+    #
+    # def read_dada(ptr, num):
+    #
+    #     block_point = 2048  # 2048点
+    #     group_point = block_point * 2  # 4096点
+    #
+    #     # bytes_header = 4096 # header=4096bytes
+    #     bytes_per_point = 4  # 每点=4bytes
+    #     bytes_per_block = block_point * bytes_per_point  # 每个block=8192bytes
+    #     bytes_per_group = bytes_per_block * 2  # 每个group=16384bytes
+    #
+    #     total_group = num * 2 // group_point  # 总组数group=65536
+    #     bytes_total_group = total_group * bytes_per_group  # 总组数group的字节数=1073741824bytes
+    #     print("待读取总字节数", bytes_total_group)
+    #     pol1 = np.empty(num, dtype=np.complex64)
+    #     pol2 = np.empty(num, dtype=np.complex64)
+    #
+    #     raw_data = ptr.read(bytes_total_group)  # 读取总数据的字节数
+    #     data = np.frombuffer(raw_data, dtype='<i2')
+    #     print("已读取的数据总数data.shape", data.shape)
+    #
+    #     # 向量化处理offset_binary转换
+    #     # XOR操作:非零值异或0x8000,零值保持为0
+    #     mask = data != 0
+    #     data_converted = data.copy()
+    #     data_converted[mask] ^= 0x8000
+    #
+    #     shorts_per_group = bytes_per_group // 2
+    #     data_reshaped = data_converted.reshape(total_group, shorts_per_group)
+    #
+    #     for i in range(total_group):
+    #         group_data = data_reshaped[i]
+    #
+    #         # pol1:前2048个复数
+    #         pol1_real = group_data[0:4096:2]
+    #         pol1_imag = group_data[1:4096:2]
+    #         pol1[i * 2048:(i + 1) * 2048] = pol1_real + 1j * pol1_imag
+    #         # pol2:后2048个复数
+    #         pol2_real = group_data[4096::2]
+    #         pol2_imag = group_data[4097::2]
+    #         pol2[i * 2048:(i + 1) * 2048] = pol2_real + 1j * pol2_imag
+    #
+    #     return pol1, pol2
+    #
+    #
+    # def add_marker(data, fs, marker_freq, marker_amp):
+    #     N = len(data)
+    #     freq_axis = np.fft.fftfreq(N, 1 / fs)
+    #     freq_shifted = np.fft.fftshift(freq_axis)
+    #
+    #     freq_data = np.fft.fftshift(np.fft.fft(data))
+    #
+    #     # 3. 处理标记频率（统一为数组格式）
+    #     if isinstance(marker_freq, (int, float)):
+    #         marker_freq = [marker_freq]
+    #
+    #     # 4. 遍历每个标记频率，找到最接近的频点索引并设置幅值
+    #     for f in marker_freq:
+    #         # 找到与目标频率最接近的频点索引
+    #         idx = np.argmin(np.abs(freq_shifted - f))
+    #         # 设置该频点的幅值（频域值）
+    #         freq_data[idx] = marker_amp
+    #
+    #     # 5. 频域转时域
+    #     freq_data = np.fft.ifftshift(freq_data)  # 逆移位
+    #     outdata = np.fft.ifft(freq_data)
+    #     return outdata
+    #
+    # def integration(data, Nfft):  # 时域积分：输入data为时域数据(M,N)，输出为频谱outdata(M,Nfft)
+    #     datadim = data.ndim == 1
+    #     if datadim: data = data.reshape(1, -1)
+    #     M, N = data.shape
+    #     segment = N // Nfft
+    #     outdata = np.zeros((M, Nfft), dtype=np.float64)
+    #     for i in range(M):
+    #         row_data = data[i]
+    #         blocks = row_data[:segment * Nfft].reshape(segment, Nfft)
+    #         fft_blocks = np.fft.fft(blocks, axis=1)
+    #         amp = np.abs(fft_blocks) ** 2  # 计算功率谱输出
+    #         avg = np.mean(amp, axis=0)
+    #         outdata[i] = avg
+    #     if datadim: outdata = outdata.ravel()
+    #     return outdata
+    #
+    #
+    # def plot_freq(data, fs, fc, title):  # data为频谱数据，对频谱直接绘图
+    #     n = len(data)
+    #     freq = fc + np.fft.fftshift(np.fft.fftfreq(n, d=1 / fs))  # 真实频率轴信息
+    #     # amp = 20*np.log10(np.abs(np.fft.fftshift(np.fft.fft(data))))
+    #     amp = np.fft.fftshift(np.abs(data))
+    #     # plt.figure(figsize=(12,5))
+    #     # plt.ylabel('Amplitude', size=14)
+    #     # plt.xlabel('Frequency(MHz)', size=14)
+    #     # plt.ylabel('幅值', size=14)
+    #     # plt.xlabel('采样点数', size=14)
+    #     # plt.title(title, size=14)
+    #     # plt.plot(freq/1e6, amp)
+    #     # plt.plot(amp)
+    #
+    #     amp_normalized = amp / np.max(amp)  # 计算归一化后的幅值
+    #     plt.figure(figsize=(12, 5))
+    #     plt.ylabel('Amplitude(normalization)', size=14)
+    #     plt.xlabel('Frequency(MHz)', size=14)
+    #     plt.plot(freq / 1e6, amp_normalized)
+    #     plt.ylim(0, 1.1)
+    #     plt.title(title, size=14)
+    #     plt.grid(True, alpha=0.3)
+    #     plt.show()
+    #
+    #
+    # filename = r'./ZhangTing/subband0.dada'
+    # ptr, file_size = load_data(filename)
+    # num = 2 ** 20
+    # pol1, pol2 = read_dada(ptr, num)
+    #
+    # data = pol1
+    # plt.plot(np.abs(np.fft.fftshift(np.fft.fft(data))))
+    # plt.show()
+    #
+    # f0 = 704e6
+    # fc = 768e6
+    # fs = 128e6
+    # Nfft = 1024
+    # fftdata = np.fft.fft(data)
+    # plot_freq(fftdata, fs, fc, title="Raw_Data Frequency Spectrum")
+    # intrawdata = integration(data, Nfft)
+    # plot_freq(intrawdata, fs, fc, title="Raw_Data Frequency Spectrum(nfft=1024)")
+    #
+    # # 添加RFI
+    # # rfidata = addrfi(data,M)
+    # rfidata = add_marker(data, fs, marker_freq=[-32e6],
+    #                      marker_amp=1e7)  # (-64,-32)(-32,0)(-32.5e6,-31.5e6)(-32.25e6,-31.75e6)
+    # fft_rfidata = np.fft.fft(rfidata)
+    # plot_freq(fft_rfidata, fs, fc, title="Marker-Data Frequency Spectrum")
+    #
+    # plt.plot(np.abs(np.fft.fftshift(np.fft.fft(rfidata))))
+    # plt.show()
     # ////////////////////////////////////////////////////////////////////////
-
+    compare_pfb(np_data, TAPS, CHANNEL_NUM, D)
+    # compare_pfb(fft_rfidata, TAPS, CHANNEL_NUM, D)
+    # ////////////////////////////////////////////////////////////////////////
     # 2.PFB并消色散，保存数据到profile中，需关闭测试代码
     # coherent_dedispersion(TAPS, CHANNEL_NUM, D)
     # 3.消色散后profile由当前目录的jupyter文件绘图，注意修改jupyter代码中的profile文件名（subospfb.txt/subcspfb.txt）
