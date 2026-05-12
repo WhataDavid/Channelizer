@@ -41,6 +41,3 @@
 ```
 ### Install ###
 ```pip install channelizers```
-
-Or clone code
-### More detail and information please access curent project's pypi website ###
