@@ -12,7 +12,8 @@ import time
 from datetime import datetime
 import cspfb
 import opfb
-
+import matplotlib
+# matplotlib.use('Qt5Agg')  # 或者 'Qt5Agg'，取决于你安装了哪个后端
 
 # 创建 Logger 实例并重定向 sys.stdout
 class Logger(object):
@@ -298,19 +299,19 @@ def realignment_coe(numtaps, M, D):
         coe.append(101 + i)
     # coe.extend(list(reversed(coe)))
 
-    # win_coeffs = scipy.signal.get_window("hamming", numtaps * M)
-    # sinc = scipy.signal.firwin(numtaps * M, cutoff=1.0 / D, window="boxcar")
-    # coe = np.zeros(win_coeffs.shape[0], dtype=np.complex128)  # 使用更高精度的数据类型
-    # for i in range(coe.shape[0]):
-    #     coe[i] = sinc[i] * win_coeffs[i]
-    # nv = np.arange(numtaps * M)
-    # for i in range(coe.shape[0]):
-    #     coe[i] *= np.exp(1j * np.pi * nv[i] / M)
+    win_coeffs = scipy.signal.get_window("hamming", numtaps * M)
+    sinc = scipy.signal.firwin(numtaps * M, cutoff=1.0 / D, window="boxcar")
+    coe = np.zeros(win_coeffs.shape[0], dtype=np.complex128)  # 使用更高精度的数据类型
+    for i in range(coe.shape[0]):
+        coe[i] = sinc[i] * win_coeffs[i]
+    nv = np.arange(numtaps * M)
+    for i in range(coe.shape[0]):
+        coe[i] *= np.exp(1j * np.pi * nv[i] / M)
 
-    coe = scipy.signal.firwin(M*numtaps, cutoff=1.0 / D, window=("kaiser", 6))
+    # coe = scipy.signal.firwin(M*numtaps, cutoff=1.0 / D, window=("kaiser", 6))
 
     coe_reshape = np.reshape(coe, (M, -1), order='F')
-    print(coe_reshape)
+    # print(coe_reshape)
     if M == D:
         print("coe do not need append zero")
         return coe_reshape
@@ -362,7 +363,7 @@ def realignment_coe(numtaps, M, D):
                     messagebox.showinfo("滤波器抽头数错误提醒", "Please try another TAPS, like multiples of D")
                     assert False, "Please try another TAPS, like multiples of D"
             cur_coll = 1
-            print(coe_reshape_sub_filter_add_zero)
+            # print(coe_reshape_sub_filter_add_zero)
             np_coe_reshape_sub_filter_add_zero = np.array(coe_reshape_sub_filter_add_zero)
             # print(np_coe_reshape_sub_filter_add_zero.shape[2])
             # print("np_coe_reshape_sub_filter_add_zero\n", np_coe_reshape_sub_filter_add_zero)
@@ -516,7 +517,7 @@ def polyphase_filter_bank_with_denominator_z(data, filter_coeffs, channel_num, D
             filt_data_conv.append(np.convolve(polyphase_data2[k], filter_coeffs[k]))
             # filt_data_conv.append(scipy.signal.lfilter(filter_coeffs[k], 1, polyphase_data2[k]))
             # print("filt_data_conv\n", filt_data_conv[k % y])
-            print()
+            # print()
             if (k + 1) % y == 0:
                 # print("add all array for :\n", filt_data_conv)
                 final_filt_result.append(sum(filt_data_conv))
@@ -628,12 +629,18 @@ def coherent_dedispersion(TAPS, CHANNEL_NUM, D):
                 dx_ospfb_rotate = circular_rotate(dx_ospfb_out, CHANNEL_NUM, D)
                 dx_ospfb_fft = np.fft.ifft(dx_ospfb_rotate, axis=0)
                 dx_ospfb_cut = cut_extra_channel_data_by_tail(np.fft.fft(dx_ospfb_fft), CHANNEL_NUM, D) * D / M
+                plot_sub(np.fft.ifft(dx_ospfb_cut), CHANNEL_NUM, D,
+                         "DX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd and rotate cut result:",
+                         cut=True)
                 subfreq1 = np.fft.ifft(dx_ospfb_cut)
 
                 dx_ospfb_out = polyphase_filter_bank_with_denominator_z(pol2, coe, CHANNEL_NUM, D)
                 dx_ospfb_rotate = circular_rotate(dx_ospfb_out, CHANNEL_NUM, D)
                 dx_ospfb_fft = np.fft.ifft(dx_ospfb_rotate, axis=0)
                 dx_ospfb_cut = cut_extra_channel_data_by_tail(np.fft.fft(dx_ospfb_fft), CHANNEL_NUM, D) * D / M
+                plot_sub(np.fft.ifft(dx_ospfb_cut), CHANNEL_NUM, D,
+                         "DX " + str(CHANNEL_NUM) + "/" + str(D) + "X ospfb with z gcd and rotate cut result:",
+                         cut=True)
                 subfreq2 = np.fft.ifft(dx_ospfb_cut)
 
                 if i == 0:
@@ -681,18 +688,18 @@ def coherent_dedispersion(TAPS, CHANNEL_NUM, D):
                     path1 = os.path.join("txt", today_date, f"ospfb{M}{D}x_pol1_block0_data_{TAPS}tap.txt")
                     path2 = os.path.join("txt", today_date, f"ospfb{M}{D}x_pol2_block0_data_{TAPS}tap.txt")
                     os.makedirs(os.path.dirname(path1), exist_ok=True)
-                    np.savetxt(path1, plot_data_pol1)
-                    np.savetxt(path2, plot_data_pol2)
+                    # np.savetxt(path1, plot_data_pol1)
+                    # np.savetxt(path2, plot_data_pol2)
                     plt.legend(prop={'size': 14})
                     # plt.yticks([0.0, 0.65e6, 1.3e6], [0, 0.5, 1], size=14)
                     # plt.xticks([0, 16384], [1582, 1182], size=14)
                     plt.xlabel('Frequency (MHz)', size=14)
                     plt.ylabel('Normalized Amplitude', size=14)
                     path = os.path.join("img", today_date, f"ospfb{M}{D}x_{TAPS}tap.jpg")
-                    plt.savefig(path, dpi=400)
+                    # plt.savefig(path, dpi=400)
                     plt.show()
 
-                    os._exit()
+                    # os._exit()
 
                 print("PFB done, use ", time.time() - cur_spend_time, " seconds, all spend ",
                       time.time() - start_time, " seconds")
@@ -978,7 +985,7 @@ def save_cus_data():
 if __name__ == '__main__':
     # conv()
     # filter taps:
-    TAPS = 32
+    TAPS = 48
     # channel_num(branch), Number of frequency bands :
     CHANNEL_NUM = 16
     # M equal channel_num(branch), more article call it M:
@@ -1032,7 +1039,8 @@ if __name__ == '__main__':
     # //////////////////////////////////////////////////////////////////////////
     # 使用测试数据：
     # 加载 example_complex.txt 文件并处理
-    file_path = r'csv\example_complex_87654321.txt'
+    # file_path = r'csv\example_complex_87654321.txt'
+    file_path = r'csv\example_complex16-1.txt'
     # 读取文件内容，并转换为 float 类型数组
     with open(file_path, 'r') as file:
         data = [complex(line.strip()) for line in file if line.strip()]
